@@ -9,55 +9,14 @@
 #include <util/delay.h>
 
 
-unsigned char readIOpins(struct IO_octet *curPins){
-	unsigned char func = 0;								/* pin function code */
-	unsigned char tmp_PIN = 0x00;						/* buffer for pin status -> port status */
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort){
+	unsigned char result = 0x00;						/* buffer for pin status -> port status */
 
-	unsigned char *cur_PIN=0;
+	for (int pin = 0; pin < VIRTUAL_PORT_PINCOUNT; pin++){					/* loop over all virtual IO Pins */
 
-
-	for (int pin = 0; pin < 8; pin++){										/* loop over all virtual IO Pins */
-
-		cur_PIN = curPins->pins[pin].PPIN;
-
-		switch (curPins->pins[pin].function_code) {
+		switch (virtualPort->pins[pin].function_code) {
 			case PIN_DISABLED:
-				cbi(tmp_PIN,(pin%8));										/* clear bit in buffer */
-				break;
-			case PIN_INPUT: 												/* input pin -> read pin status to buffer */
-
-				if ( bis(*cur_PIN,curPins->pins[pin].pin) ) {			/* get status of current pin */
-					//set "ON"
-					sbi(tmp_PIN,pin%8);										/* set bit */
-				} else {
-					//set "OFF"
-					cbi(tmp_PIN,pin%8);										/* clear bit */
-				}
-				break;
-			case PIN_SWITCH: 												/* switch pin -> read current pin status to buffer */
-
-				if ( bis(*cur_PIN,curPins->pins[pin].pin) ) {			/* get status of current pin */
-					//set "ON"
-					cbi(tmp_PIN,pin%8);										/* set bit */
-				} else {
-					//set "OFF"
-					sbi(tmp_PIN,pin%8);										/* clear bit */
-				}
-				break;
-			case PIN_PULSE:
-				/* switch pin -> read current pin status to buffer
-				 * - same behaviour as switch pin
-				 * - even the "short" on pulse can detected by this function
-				 * - normally the off state would be detected by this function
-				 */
-
-				if ( bis(*cur_PIN,curPins->pins[pin].pin) ) {			/* get status of current pin */
-					//set "ON"
-					cbi(tmp_PIN,pin%8);										/* set bit */
-				} else {
-					//set "OFF"
-					sbi(tmp_PIN,pin%8);										/* clear bit */
-				}
+				cbi(result,(pin%8));										/* clear bit in buffer */
 				break;
 			case PIN_S0:
 				/*
@@ -65,33 +24,36 @@ unsigned char readIOpins(struct IO_octet *curPins){
 				 * - check ddr/port/pin for S0 pin (only interrupt pins possible for this function)
 				 * - write current counter value to virtual pin data area of txbuffer
 				 */
-/*				if((cur_PORT == P_S0_0_PORT) && (cur_DDR == P_S0_0_DDR) && (io_pins[pin].pin == S0_0_PIN)){
-					txbuffer[VIRTUAL_DATA_START+(pin*sizeof(uint32_t))] = get_S0_data(0);
-				}
-				if((cur_PORT == P_S0_1_PORT) && (cur_DDR == P_S0_1_DDR) && (io_pins[pin].pin == S0_1_PIN)){
-					txbuffer[VIRTUAL_DATA_START+(pin*sizeof(uint32_t))] = get_S0_data(1);
-				}*/
 				break;
-
+			case PIN_INPUT: 												/* input pin -> read pin status to buffer */
+			case PIN_SWITCH: 												/* switch pin -> read current pin status to buffer */
+			case PIN_TOGGLE:
+			case PIN_PULSE:
 			default:														/* default handling */
-				sbi(tmp_PIN,(pin%8));										/* set bit */
+				if ( bis(*virtualPort->pins[pin].PPIN,virtualPort->pins[pin].pin) ) {			/* get status of current pin */
+					//set "ON"
+					cbi(result,pin%8);										/* set bit */
+				} else {
+					//set "OFF"
+					sbi(result,pin%8);										/* clear bit */
+				}
 				break;
 		}
 
 	}
-	return tmp_PIN;
+	return result;
 }
 
-void handleIOpins(struct IO_octet *curPins, unsigned char instructions) {
+void handleIOport(struct virtual_IO_port *virtualPort, unsigned char instructions) {
 
 	unsigned char *cur_DDR=0;												/* pointer to DDR register */
-	unsigned char *cur_PORT=0;												/* pointer to I/O Port */
-
-/*	unsigned char S0_0 = 0;
-	unsigned char S0_1 = 0;*/
+	unsigned char *cur_PORT=0;												/* pointer to O Port */
+	unsigned char *cur_PIN=0;												/* pointer to I Pin */
 
 
-	for (int pin = 0; pin < 8; pin++) {										/* loop over all virtual IO Pins */
+	IO_DEBUG("\r\nhandleIOport:0x%x\r\n",instructions);
+
+	for (int pin = 0; pin < VIRTUAL_PORT_PINCOUNT; pin++) {										/* loop over all virtual IO Pins */
 
 		/*
 		 * first get all needed address information for current pin/port
@@ -100,35 +62,55 @@ void handleIOpins(struct IO_octet *curPins, unsigned char instructions) {
 		 */
 
 
-		cur_PORT = curPins->pins[pin].PPORT;							/* get pointer to current port */
-		cur_DDR	 = curPins->pins[pin].PDDR;								/* get pointer to current datadirectionregister */
+		cur_PORT = virtualPort->pins[pin].PPORT;							/* get pointer to current port */
+		IO_DEBUG("\r\ncurPort:0x%x\r\n",cur_PORT);
 
-		switch (curPins->pins[pin].function_code) {														/* handle current pin by function code */
+		cur_PIN = virtualPort->pins[pin].PPIN;							/* get pointer to current pin */
+		IO_DEBUG("curPIN:0x%x\r\n",cur_PIN);
+
+		cur_DDR	 = virtualPort->pins[pin].PDDR;								/* get pointer to current datadirectionregister */
+		IO_DEBUG("curDDR:0x%x\r\n",cur_DDR);
+
+		switch (virtualPort->pins[pin].function_code) {														/* handle current pin by function code */
 		case PIN_DISABLED:													/* pin is marked as disabled */
-			*cur_DDR	&= ~(1 << curPins->pins[pin].pin); 				//disable PIN
-			*cur_PORT	&= ~(1 << curPins->pins[pin].pin); 				//disable PULLUP
+			*cur_DDR	&= ~(1 << virtualPort->pins[pin].pin); 				//disable PIN
+			*cur_PORT	&= ~(1 << virtualPort->pins[pin].pin); 				//disable PULLUP
 			break;
 		case PIN_INPUT: 													/* pin marked as input -> set as input nothing else to to (value is readout @readIOpins() */
-			*cur_DDR &= ~(1 << curPins->pins[pin].pin); 				//set DDR "0"
-			*cur_PORT |= (1 << curPins->pins[pin].pin); 				//enable pullup PORT "1"
+			*cur_DDR &= ~(1 << virtualPort->pins[pin].pin); 				//set DDR "0"
+			*cur_PORT |= (1 << virtualPort->pins[pin].pin); 				//enable pullup PORT "1"
 			break;
 		case PIN_SWITCH: 													/* pin marked as output -> set as output and set the value of the specific bit of rxbuffer*/
-			*cur_DDR |= (1 << curPins->pins[pin].pin); 					/* set DDR "1" -> output */
+			IO_DEBUG("switch pin\r\n");
+
+			*cur_DDR |= (1 << virtualPort->pins[pin].pin); 					/* set DDR "1" -> output */
 			if ( bis(instructions,(pin%8)) ) {
-				*cur_PORT &= ~(1 << curPins->pins[pin].pin);			//set "ON"
+				IO_DEBUG("set pin[%i]\r\n",virtualPort->pins[pin].pin);
+				*cur_PORT &= ~(1 << virtualPort->pins[pin].pin);			//set 0 -> "ON"
 			} else {
-				*cur_PORT |= (1 << curPins->pins[pin].pin);				//set "OFF"
+				IO_DEBUG("unset pin[%i]\r\n",virtualPort->pins[pin].pin);
+				*cur_PORT |= (1 << virtualPort->pins[pin].pin);				//set 1 -> "OFF"
 			}
 			break;
 		case PIN_PULSE: 													/* pin marked as output -> set as output and pulse the specific pin */
-			*cur_DDR |= (1 << curPins->pins[pin].pin); 					/* set DDR "1" -> output */
-			if( bis(instructions,(pin%8)) ){						//only handle active pins
-				*cur_PORT &= ~(1 << curPins->pins[pin].pin); 			//set ON
-				_delay_ms(300); 											/* wait 300ms @todo set eeprom address for dynamic usage */
-				cbi(instructions,pin%8); 						/* set bit to 0 */
+			*cur_DDR |= (1 << virtualPort->pins[pin].pin); 					/* set DDR "1" -> output */
+			if( bis(instructions,(pin%8)) ){							//only handle active pins
+				*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); 			//set 0 -> "ON"
+				_delay_ms(300); 											/* wait 300ms @todo set "global" variable for dynamic usage */
+				*cur_PORT |= (1 << virtualPort->pins[pin].pin); 				//set 1 > "OFF"
 			}
-			*cur_PORT |= (1 << curPins->pins[pin].pin); 				//set OFF
 
+			break;
+		case PIN_TOGGLE: 													/* pin marked as output -> set as output and pulse the specific pin */
+			*cur_DDR |= (1 << virtualPort->pins[pin].pin); 					/* set DDR "1" -> output */
+			if( bis(instructions,(pin%8)) ){						//only handle active pins
+				if(bis(*cur_PIN,(pin%8))){
+					*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); 			//set ON
+
+				}else{
+					*cur_PORT |= (1 << virtualPort->pins[pin].pin); 			//set 1 -> "OFF"
+				}
+			}
 			break;
 		case PIN_S0:
 			/*
@@ -168,8 +150,8 @@ void handleIOpins(struct IO_octet *curPins, unsigned char instructions) {
 			}*/
 			break;
 		default:
-			*cur_DDR &= ~(1 << curPins->pins[pin].pin); //disable PIN
-			*cur_PORT &= ~(1 << curPins->pins[pin].pin); //disable PULLUP
+			*cur_DDR &= ~(1 << virtualPort->pins[pin].pin); //disable PIN
+			*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); //disable PULLUP
 			break;
 			}
 	}

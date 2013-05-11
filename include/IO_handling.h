@@ -3,10 +3,21 @@
  *
  *  Created on: 31.01.2013
  *      Author: icke
+ *
+ *
+ *
+ *      simple library for common IO handling on AVR
+ *      - virtual IO ports (individual mapping for each physical IO pin)
+ *      - set special "functions" to pins for extended usage (e.g. S0 bus)
  */
 
 #ifndef IO_HANDLING_H_
 #define IO_HANDLING_H_
+
+#include "usart.h"
+
+	#define IO_DEBUG	usart_write
+	//#define IO_DEBUG(...)
 
 
 //###################### Macros (jtronics)
@@ -28,45 +39,45 @@
 #define	PIN_DISABLED		0x00		/* pin unused */
 #define PIN_INPUT			0x01		/* pin used for input */
 #define PIN_SWITCH			0x02		/* pin used for switching */
-#define PIN_PULSE			0x03		/* pin used for "short" impulse */
-#define PIN_S0				0x04		/* pin used for S0 bus (not ISDN), but only usable on interrupt pins */
-#define PIN_UART			0x05		/* pins used for uart in/output */
-#define PIN_OW				0x06		/* one-wire pin */
-#define PIN_ADC				0x07		/* ADC pin */
+#define PIN_TOGGLE			0x03		/* toggle current pin status */
+#define PIN_PULSE			0x04		/* pin used for "short" impulse */
+#define PIN_S0				0x05		/* pin used for S0 bus (not ISDN), but only usable on interrupt pins */
+#define PIN_UART			0x06		/* pins used for uart in/output */
+#define PIN_OW				0x07		/* one-wire pin */
+#define PIN_ADC				0x08		/* ADC pin */
 
 /* structure with all needed address and function data */
 struct IO_pin{
-unsigned char *PPORT;
-unsigned char *PPIN;
-unsigned char *PDDR;
-unsigned char pin;
-unsigned char function_code;
+unsigned char *PPORT;			/* physical port pointer (output) */
+unsigned char *PPIN;			/* physical pin pointer (input) */
+unsigned char *PDDR;			/* data direction pointer */
+unsigned char pin;				/* pin number of physical port */
+unsigned char function_code;	/* pin function code (see defines above) */
 };
 
-struct IO_octet{
-	struct IO_pin pins[8];
+/**
+ * pin count for one virtual port
+ * - should have same size as the request/return value of the handle/read functions
+ */
+#define VIRTUAL_PORT_PINCOUNT	8
+
+struct virtual_IO_port{
+	struct IO_pin pins[VIRTUAL_PORT_PINCOUNT];
 };
 
-#ifndef MAX_IO_PINS
-	#define MAX_IO_PINS	8
-#endif
-
-#ifndef MAX_VIRT_IO_PORT
-	#define	MAX_VIRT_IO_PORT	(MAX_IO_PINS/8)+1	/* calc count of virtual port memory */
-#endif
-
-extern struct IO_octet io_pins[MAX_VIRT_IO_PORT];
+/* calc count of virtual port memory */
+#define GET_VIRT_PORT_COUNT(max_io_pins) (max_io_pins/8)+1
 
 /**
- * @brief initializing function for virtual IO pins
+ * @brief initializing function for virtual IO ports
  */
-extern void initIOpins(void);
+extern void initvirtIOport(void);
 
 /**
- * @brief get input data of all input pins
- * @return byte of current situationon virtual input pins
+ * @brief get input data of all virtual input pins
+ * @return byte of current virtual input port
  */
-unsigned char readIOpins(struct IO_octet *curPins);
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort);
 
 /**
  * @brief set output pins by instruction byte
@@ -74,5 +85,5 @@ unsigned char readIOpins(struct IO_octet *curPins);
  * @param curPins pointer to current pin structure (8 pins)
  * @param instructions instruction byte how to set the output pins
  */
-void handleIOpins(struct IO_octet *curPins,unsigned char instructions);
+void handleIOport(struct virtual_IO_port *virtualPort,unsigned char instructions);
 #endif /* IO_HANDLING_H_ */
