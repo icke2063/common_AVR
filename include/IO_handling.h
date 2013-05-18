@@ -66,7 +66,7 @@ struct virtual_IO_port{
 };
 
 /* calc count of virtual port memory */
-#define GET_VIRT_PORT_COUNT(max_io_pins) (max_io_pins/8)+1
+#define GET_VIRT_PORT_COUNT(count_io_pins) (count_io_pins/8)+((count_io_pins%8)>0?1:0)
 
 /**
  * @brief initializing function for virtual IO ports
