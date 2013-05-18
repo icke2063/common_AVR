@@ -13,12 +13,10 @@
 
 #ifndef IO_HANDLING_H_
 #define IO_HANDLING_H_
-
 #include "usart.h"
 
-	#define IO_DEBUG	usart_write
-	//#define IO_DEBUG(...)
-
+//	#define IO_DEBUG usart_write
+#define IO_DEBUG(...)
 
 //###################### Macros (jtronics)
 #define uniq(LOW,HEIGHT)	((HEIGHT << 8)|LOW)			// 2x 8Bit 	--> 16Bit
