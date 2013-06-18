@@ -78,7 +78,7 @@ struct virtual_IO_port{
 /**
  * @brief initializing function for virtual IO ports
  */
-extern void initvirtIOport(void);
+extern void initIOport(struct virtual_IO_port *virtualPort);
 
 /**
  * @brief get input data of all virtual input pins
@@ -92,5 +92,5 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort);
  * @param curPins pointer to current pin structure (8 pins)
  * @param instructions instruction byte how to set the output pins
  */
-void handleIOport(struct virtual_IO_port *virtualPort,unsigned char instructions);
+void handleIOport(struct virtual_IO_port *virtualPort,unsigned char instructions, const unsigned char mask);
 #endif /* IO_HANDLING_H_ */
