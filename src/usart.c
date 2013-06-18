@@ -6,15 +6,15 @@
  Version:        24.10.2007
  Description:    RS232 Routinen
 
- Dieses Programm ist freie Software. Sie kˆnnen es unter den Bedingungen der 
- GNU General Public License, wie von der Free Software Foundation verˆffentlicht, 
- weitergeben und/oder modifizieren, entweder gem‰ﬂ Version 2 der Lizenz oder 
- (nach Ihrer Option) jeder sp‰teren Version. 
+ Dieses Programm ist freie Software. Sie k√∂nnen es unter den Bedingungen der 
+ GNU General Public License, wie von der Free Software Foundation ver√∂ffentlicht, 
+ weitergeben und/oder modifizieren, entweder gem√§√ü Version 2 der Lizenz oder 
+ (nach Ihrer Option) jeder sp√§teren Version. 
 
- Die Verˆffentlichung dieses Programms erfolgt in der Hoffnung, 
- daﬂ es Ihnen von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, 
+ Die Ver√∂ffentlichung dieses Programms erfolgt in der Hoffnung, 
+ da√ü es Ihnen von Nutzen sein wird, aber OHNE IRGENDEINE GARANTIE, 
  sogar ohne die implizite Garantie der MARKTREIFE oder der VERWENDBARKEIT 
- F‹R EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License. 
+ F√úR EINEN BESTIMMTEN ZWECK. Details finden Sie in der GNU General Public License. 
 
  Sie sollten eine Kopie der GNU General Public License zusammen mit diesem 
  Programm erhalten haben. 
@@ -33,10 +33,9 @@ char *rx_buffer_pointer_out	= &usart_rx_buffer[0];
 //Init serielle Schnittstelle
 void usart_init(unsigned long baudrate) 
 { 
-#if !USE_CAM
 	//Serielle Schnittstelle 1
   	//Enable TXEN im Register UCR TX-Data Enable
-	UCR =(1 << TXEN | 1 << RXEN | 1<< RXCIE);
+	UCR =(1 << TXEN | 1<< RXCIE);
 	// 0 = Parity Mode Disabled
 	// 1 = Parity Mode Enabled, Even Parity
 	// 2 = Parity Mode Enabled, Odd Parity
@@ -45,46 +44,21 @@ void usart_init(unsigned long baudrate)
 	//Teiler wird gesetzt 
 	UBRR=(F_CPU / (baudrate * 16L) - 1);
 	usart_status.usart_disable = 0;
-#endif //USE_CAM
 }
 
 //----------------------------------------------------------------------------
-//Routine f¸r die Serielle Ausgabe eines Zeichens (Schnittstelle0)
+//Routine fÔøΩr die Serielle Ausgabe eines Zeichens (Schnittstelle0)
 void usart_write_char(char c)
 {
-#if CMD_TELNET
-	if(usart_status.usart_disable)
+	if(!usart_status.usart_disable)
 	{
-        if(rx_buffer_pointer_in == (rx_buffer_pointer_out - 1))
-        {
-            //Datenverlust
-                    telnetd_send_data ();
-                    while(telnetd_status.ack_wait)
-                    {
-                        eth_get_data();
-                    }
-        }
+		//Warten solange bis Zeichen gesendet wurde
+		while(!(USR & (1<<UDRE)));
+		//Ausgabe des Zeichens
+		UDR = c;
+	}
+	return;
 
-        *rx_buffer_pointer_in++ = c;
-
-        if (rx_buffer_pointer_in == &usart_rx_buffer[BUFFER_SIZE-1])
-        {
-            rx_buffer_pointer_in = &usart_rx_buffer[0];
-        }
-    }
-    return;
-#else
-    #if !USE_CAM
-        if(!usart_status.usart_disable)
-        {
-            //Warten solange bis Zeichen gesendet wurde
-            while(!(USR & (1<<UDRE)));
-            //Ausgabe des Zeichens
-            UDR = c;
-        }
-        return;
-    #endif //USE_CAM
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -187,7 +161,6 @@ void usart_write_str(char *str)
 
 //----------------------------------------------------------------------------
 //Empfang eines Zeichens
-#if !USE_CAM
 ISR (USART_RX)
 {
 	if(!usart_status.usart_disable)
@@ -241,4 +214,3 @@ ISR (USART_RX)
 	}
 	return;
 }
-#endif //USE_CAM
