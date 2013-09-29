@@ -8,6 +8,8 @@
 #include "IO_handling.h"
 #include <util/delay.h>
 
+static uint16_t pulse_time = DEFAULT_PULSE_TIME;
+
 unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 	unsigned char pin;
 	unsigned char result = 0x00; /* buffer for pin status -> port status */
@@ -75,6 +77,7 @@ void handleIOport(struct virtual_IO_port *virtualPort,
 	unsigned char *cur_DDR = 0; /* pointer to DDR register */
 	unsigned char *cur_PORT = 0; /* pointer to O Port */
 	unsigned char *cur_PIN = 0; /* pointer to I Pin */
+	unsigned char cur_pin = 0;	/* pin number */
 
 	HANDLE_IO_DEBUG("\r\nhandleIOport:0x%x\r\n",instructions);
 
@@ -100,41 +103,43 @@ void handleIOport(struct virtual_IO_port *virtualPort,
 		cur_PIN = virtualPort->pins[pin].PPIN; /* get pointer to current pin */
 		HANDLE_IO_DEBUG("pPIN:0x%x\r\n",cur_PIN);
 
+		cur_pin = virtualPort->pins[pin].pin;
+		HANDLE_IO_DEBUG("pin:0x%x\r\n",cur_pin);
+
 		HANDLE_IO_DEBUG("func:0x%x\r\n",virtualPort->pins[pin].function_code);
 
 		switch (virtualPort->pins[pin].function_code) { /* handle current pin by function code */
 		case PIN_DISABLED: /* pin is marked as disabled */
-			*cur_DDR &= ~(1 << virtualPort->pins[pin].pin); //disable PIN
-			*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); //disable PULLUP
+			*cur_DDR &= ~(1 << cur_pin); //disable PIN
+			*cur_PORT &= ~(1 << cur_pin); //disable PULLUP
 			break;
 		case PIN_INPUT: /* pin marked as input -> set as input nothing else to to (value is readout @readIOpins() */
-			*cur_DDR &= ~(1 << virtualPort->pins[pin].pin); //set DDR "0"
-			*cur_PORT |= (1 << virtualPort->pins[pin].pin); //enable pullup PORT "1"
+			*cur_DDR &= ~(1 << cur_pin); //set DDR "0"
+			*cur_PORT |= (1 << cur_pin); //enable pullup PORT "1"
 			break;
 		case PIN_SWITCH: /* pin marked as output -> set as output and set the value of the specific bit of rxbuffer*/
-			*cur_DDR |= (1 << virtualPort->pins[pin].pin); /* set DDR "1" -> output */
+			*cur_DDR |= (1 << cur_pin); /* set DDR "1" -> output */
 			if (bis(instructions,(pin%8))) { //on or off
-				*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); //set 0 -> "OFF"
+				*cur_PORT &= ~(1 << cur_pin); //set 0 -> "OFF"
 			} else {
-				*cur_PORT |= (1 << virtualPort->pins[pin].pin); //set 1 -> "ON"
+				*cur_PORT |= (1 << cur_pin); //set 1 -> "ON"
 			}
 			break;
 		case PIN_PULSE: /* pin marked as output -> set as output and pulse the specific pin */
-			*cur_DDR |= (1 << virtualPort->pins[pin].pin); /* set DDR "1" -> output */
+			*cur_DDR |= (1 << cur_pin); /* set DDR "1" -> output */
 			if (bis(instructions,(pin%8))) { //only handle active pins
-				*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); //set 0 > "OFF"
-				_delay_ms(300); /* wait 300ms @todo set "global" variable for dynamic usage */
-				*cur_PORT |= (1 << virtualPort->pins[pin].pin); //set 1 -> "ON"
-
+				*cur_PORT &= ~(1 << cur_pin); //set 0 > "OFF"
+				_delay_ms(pulse_time); /* wait x ms */
+				*cur_PORT |= (1 << cur_pin); //set 1 -> "ON"
 			}
 			break;
 		case PIN_TOGGLE: /* pin marked as output -> set as output and pulse the specific pin */
-			*cur_DDR |= (1 << virtualPort->pins[pin].pin); /* set DDR "1" -> output */
+			*cur_DDR |= (1 << cur_pin); /* set DDR "1" -> output */
 			if (bis(instructions,(pin%8))) { //only handle active pins
-				if (bis(*cur_PORT,(virtualPort->pins[pin].pin%8))) { //test old value
-					*cur_PORT &= ~(1 << virtualPort->pins[pin].pin); //set OFF
+				if (bis(*cur_PORT,(cur_pin%8))) { //test old value
+					*cur_PORT &= ~(1 << cur_pin); //set OFF
 				} else {
-					*cur_PORT |= (1 << virtualPort->pins[pin].pin); //set 1 -> "ON"
+					*cur_PORT |= (1 << cur_pin); //set 1 -> "ON"
 				}
 			}
 			break;
@@ -203,7 +208,7 @@ void initIOport(struct virtual_IO_port *virtualPort) {
 	INIT_IO_DEBUG("\r\ninitIOport\r\n");
 
 	for (int pin = 0; pin < VIRTUAL_PORT_PINCOUNT; pin++) { /* loop over all virtual IO Pins */
-		INIT_IO_DEBUG("pin[%i]",pin);
+		INIT_IO_DEBUG("pin[%i]::",pin);
 		cur_PORT = virtualPort->pins[pin].PPORT; /* get pointer to current port */
 		INIT_IO_DEBUG("pPort:0x%x;",cur_PORT);
 
@@ -212,6 +217,8 @@ void initIOport(struct virtual_IO_port *virtualPort) {
 
 		cur_PIN = virtualPort->pins[pin].PPIN; /* get pointer to current pin */
 		INIT_IO_DEBUG("pPIN:0x%x;",cur_PIN);
+
+		INIT_IO_DEBUG("pin:0x%x;",virtualPort->pins[pin].pin);
 
 		INIT_IO_DEBUG("func:0x%x",virtualPort->pins[pin].function_code);
 

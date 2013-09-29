@@ -15,7 +15,7 @@
 #define IO_HANDLING_H_
 #include "usart.h"
 
-	#define IO_DEBUG usart_write
+#define IO_DEBUG usart_write
 //#define IO_DEBUG(...)
 
 //#define READ_IO_DEBUG IO_DEBUG
@@ -53,6 +53,9 @@
 #define PIN_OW				0x07		/* one-wire pin */
 #define PIN_ADC				0x08		/* ADC pin */
 
+#define DEFAULT_PULSE_TIME	300
+static uint16_t pulse_time;
+
 /* structure with all needed address and function data */
 struct IO_pin{
 unsigned char *PPORT;			/* physical port pointer (output) */
@@ -78,7 +81,7 @@ struct virtual_IO_port{
 /**
  * @brief initializing function for virtual IO ports
  */
-extern void initIOport(struct virtual_IO_port *virtualPort);
+void initIOport(struct virtual_IO_port *virtualPort);
 
 /**
  * @brief get input data of all virtual input pins
