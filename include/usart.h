@@ -22,9 +22,9 @@
  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA. 
 ------------------------------------------------------------------------------*/
 #ifndef _UART_H
-	#define _UART_H
+#define _UART_H
 
-  #include "usart_config.h"
+	#include "usart_config.h"
 	#define USART_ECHO	1
 	
     #define BUFFER_SIZE	50
