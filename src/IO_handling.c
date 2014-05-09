@@ -7,10 +7,14 @@
 
 #include "IO_handling.h"
 #include <util/delay.h>
+#include <1-wire_config.h>
+#ifdef USE_OW
+	#include <ds18x20.h>
+#endif
 
 static uint16_t pulse_time = DEFAULT_PULSE_TIME;
 
-unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_num) {
 	unsigned char pin;
 	unsigned char result = 0x00; /* buffer for pin status -> port status */
 
@@ -60,6 +64,14 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 				/* set bit */
 			}
 			break;
+#ifdef USE_OW
+		case PIN_OW_POWER_PARASITE:
+			read1WirePin(&virtualPort[pin], port_num, pin, DS18X20_POWER_PARASITE);
+			break;
+		case PIN_OW_POWER_EXTERN:
+			read1WirePin(&virtualPort[pin], port_num, pin, DS18X20_POWER_EXTERN);
+			break;
+#endif
 		case PIN_DISABLED:
 		default: /* default handling */
 			cbi(result, (pin%8));
@@ -143,6 +155,14 @@ void handleIOport(struct virtual_IO_port *virtualPort,
 				}
 			}
 			break;
+#ifdef USE_OW
+		case PIN_OW_POWER_PARASITE:
+			set1WirePin(&virtualPort[pin], DS18X20_POWER_PARASITE);
+			break;
+		case PIN_OW_POWER_EXTERN:
+			set1WirePin(&virtualPort[pin], DS18X20_POWER_EXTERN);
+			break;
+#endif
 		case PIN_S0:
 			/*
 			 * S0 functionality

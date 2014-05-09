@@ -12,5 +12,5 @@
 	#define F_CPU 1000000UL
 #endif
 
-#define BAUDRATE 19200 // -> Handy Siemens C35is
+#define BAUDRATE 19200
 #endif /* CONFIG_USART_H_ */

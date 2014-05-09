@@ -14,6 +14,7 @@
 #ifndef IO_HANDLING_H_
 #define IO_HANDLING_H_
 #include "usart.h"
+#include <stdint.h>
 
 #define IO_DEBUG usart_write
 //#define IO_DEBUG(...)
@@ -43,15 +44,16 @@
 /**
  * some defines for pin functions
  */
-#define	PIN_DISABLED		0x00		/* pin unused */
-#define PIN_INPUT			0x01		/* pin used for input */
-#define PIN_SWITCH			0x02		/* pin used for switching */
-#define PIN_TOGGLE			0x03		/* toggle current pin status */
-#define PIN_PULSE			0x04		/* pin used for "short" impulse */
-#define PIN_S0				0x05		/* pin used for S0 bus (not ISDN), but only usable on interrupt pins */
-#define PIN_UART			0x06		/* pins used for uart in/output */
-#define PIN_OW				0x07		/* one-wire pin */
-#define PIN_ADC				0x08		/* ADC pin */
+#define	PIN_DISABLED			0x00		/* pin unused */
+#define PIN_INPUT				0x01		/* pin used for input */
+#define PIN_SWITCH				0x02		/* pin used for switching */
+#define PIN_TOGGLE				0x03		/* toggle current pin status */
+#define PIN_PULSE				0x04		/* pin used for "short" impulse */
+#define PIN_S0					0x05		/* pin used for S0 bus (not ISDN), but only usable on interrupt pins */
+#define PIN_UART				0x06		/* pins used for uart in/output */
+#define PIN_OW_POWER_PARASITE	0x07		/* one-wire pin */
+#define PIN_OW_POWER_EXTERN		0x08		/* one-wire pin */
+#define PIN_ADC					0x09		/* ADC pin */
 
 #define DEFAULT_PULSE_TIME	300
 static uint16_t pulse_time;
@@ -62,7 +64,7 @@ unsigned char *PPORT;			/* physical port pointer (output) */
 unsigned char *PPIN;			/* physical pin pointer (input) */
 unsigned char *PDDR;			/* data direction pointer */
 unsigned char pin;				/* pin number of physical port */
-unsigned char function_code;	/* pin function code (see defines above) */
+uint8_t function_code;	/* pin function code (see defines above) */
 };
 
 /**
@@ -87,7 +89,7 @@ void initIOport(struct virtual_IO_port *virtualPort);
  * @brief get input data of all virtual input pins
  * @return byte of current virtual input port
  */
-unsigned char readvirtIOport(struct virtual_IO_port *virtualPort);
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_num);
 
 /**
  * @brief set output pins by instruction byte
@@ -96,4 +98,8 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort);
  * @param instructions instruction byte how to set the output pins
  */
 void handleIOport(struct virtual_IO_port *virtualPort,unsigned char instructions, const unsigned char mask);
+#ifdef USE_OW
+	void set1WirePin(struct IO_pin *vpin, uint8_t power_mode);
+	void read1WirePin(struct IO_pin *vpin, uint8_t port_num, uint8_t pin_num, uint8_t power_mode);
+#endif
 #endif /* IO_HANDLING_H_ */
