@@ -13,11 +13,11 @@
 
 #ifndef IO_HANDLING_H_
 #define IO_HANDLING_H_
-#include "usart.h"
+//#include "usart.h"
 #include <stdint.h>
 
-#define IO_DEBUG usart_write
-//#define IO_DEBUG(...)
+//#define IO_DEBUG usart_write
+#define IO_DEBUG(...)
 
 //#define READ_IO_DEBUG IO_DEBUG
 #define READ_IO_DEBUG(...)
