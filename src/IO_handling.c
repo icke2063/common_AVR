@@ -7,7 +7,7 @@
 
 #include "IO_handling.h"
 #include <util/delay.h>
-#include <1-wire_config.h>
+#include <stddef.h>
 #ifdef USE_OW
 	#include <ds18x20.h>
 #endif

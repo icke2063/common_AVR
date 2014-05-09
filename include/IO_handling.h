@@ -13,8 +13,8 @@
 
 #ifndef IO_HANDLING_H_
 #define IO_HANDLING_H_
-//#include "usart.h"
 #include <stdint.h>
+#include <1-wire_config.h>
 
 //#define IO_DEBUG usart_write
 #define IO_DEBUG(...)
