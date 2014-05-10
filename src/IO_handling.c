@@ -66,10 +66,10 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_n
 			break;
 #ifdef USE_OW
 		case PIN_OW_POWER_PARASITE:
-			read1WirePin(&virtualPort[pin], port_num, pin, DS18X20_POWER_PARASITE);
+			read1WirePin(&virtualPort->pins[pin], port_num, pin, DS18X20_POWER_PARASITE);
 			break;
 		case PIN_OW_POWER_EXTERN:
-			read1WirePin(&virtualPort[pin], port_num, pin, DS18X20_POWER_EXTERN);
+			read1WirePin(&virtualPort->pins[pin], port_num, pin, DS18X20_POWER_EXTERN);
 			break;
 #endif
 		case PIN_DISABLED:
@@ -157,10 +157,10 @@ void handleIOport(struct virtual_IO_port *virtualPort,
 			break;
 #ifdef USE_OW
 		case PIN_OW_POWER_PARASITE:
-			set1WirePin(&virtualPort[pin], DS18X20_POWER_PARASITE);
+			set1WirePin(&virtualPort->pins[pin], DS18X20_POWER_PARASITE);
 			break;
 		case PIN_OW_POWER_EXTERN:
-			set1WirePin(&virtualPort[pin], DS18X20_POWER_EXTERN);
+			set1WirePin(&virtualPort->pins[pin], DS18X20_POWER_EXTERN);
 			break;
 #endif
 		case PIN_S0:
