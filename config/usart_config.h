@@ -12,5 +12,9 @@
 	#define F_CPU 1000000UL
 #endif
 
-#define BAUDRATE 19200
+#define BAUDRATE 4800	//good for Atmega8
+
+//#define BAUDRATE 9600
+
+//#define BAUDRATE 19200
 #endif /* CONFIG_USART_H_ */
