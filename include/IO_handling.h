@@ -15,6 +15,7 @@
 #define IO_HANDLING_H_
 #include <stdint.h>
 #include <1-wire_config.h>
+#include "function_codes.h"
 
 //#define IO_DEBUG usart_write
 #define IO_DEBUG(...)
@@ -40,20 +41,6 @@
 
 #define	bis(ADDRESS,BIT)	(ADDRESS & (1<<BIT))		// bit is set?
 #define	bic(ADDRESS,BIT)	(!(ADDRESS & (1<<BIT)))		// bit is clear?
-
-/**
- * some defines for pin functions
- */
-#define	PIN_DISABLED			0x00		/* pin unused */
-#define PIN_INPUT				0x01		/* pin used for input */
-#define PIN_SWITCH				0x02		/* pin used for switching */
-#define PIN_TOGGLE				0x03		/* toggle current pin status */
-#define PIN_PULSE				0x04		/* pin used for "short" impulse */
-#define PIN_S0					0x05		/* pin used for S0 bus (not ISDN), but only usable on interrupt pins */
-#define PIN_UART				0x06		/* pins used for uart in/output */
-#define PIN_OW_POWER_PARASITE	0x07		/* one-wire pin */
-#define PIN_OW_POWER_EXTERN		0x08		/* one-wire pin */
-#define PIN_ADC					0x09		/* ADC pin */
 
 #define DEFAULT_PULSE_TIME	300
 static uint16_t pulse_time;
