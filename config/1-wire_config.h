@@ -10,7 +10,6 @@
 
 #include <avr/io.h>
 
-#define USE_OW	1
 //#define OW_ONE_BUS	1
 
 #ifdef OW_ONE_BUS
