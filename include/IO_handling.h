@@ -76,7 +76,7 @@ void initIOport(struct virtual_IO_port *virtualPort);
  * @brief get input data of all virtual input pins
  * @return byte of current virtual input port
  */
-unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_num);
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort);
 
 /**
  * @brief set output pins by instruction byte
@@ -87,6 +87,6 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_n
 void handleIOport(struct virtual_IO_port *virtualPort,unsigned char instructions, const unsigned char mask);
 #ifdef USE_OW
 	void set1WirePin(struct IO_pin *vpin, uint8_t power_mode);
-	void read1WirePin(struct IO_pin *vpin, uint8_t port_num, uint8_t pin_num, uint8_t power_mode);
+	void read1WirePin(struct IO_pin *vpin, uint8_t power_mode);
 #endif
 #endif /* IO_HANDLING_H_ */

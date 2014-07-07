@@ -14,7 +14,7 @@
 
 static uint16_t pulse_time = DEFAULT_PULSE_TIME;
 
-unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_num) {
+unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 	unsigned char pin;
 	unsigned char result = 0x00; /* buffer for pin status -> port status */
 
@@ -66,10 +66,10 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort, uint8_t port_n
 			break;
 #ifdef USE_OW
 		case PIN_OW_POWER_PARASITE:
-			read1WirePin(&virtualPort->pins[pin], port_num, pin, DS18X20_POWER_PARASITE);
+			read1WirePin(&virtualPort->pins[pin], DS18X20_POWER_PARASITE);
 			break;
 		case PIN_OW_POWER_EXTERN:
-			read1WirePin(&virtualPort->pins[pin], port_num, pin, DS18X20_POWER_EXTERN);
+			read1WirePin(&virtualPort->pins[pin], DS18X20_POWER_EXTERN);
 			break;
 #endif
 		case PIN_DISABLED:
