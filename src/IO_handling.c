@@ -27,7 +27,10 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 		READ_IO_DEBUG("pin:%i\r\n",pin);
 		READ_IO_DEBUG("func:0x%x\r\n",virtualPort->pins[pin].function_code);
 
-		if(virtualPort->pins[pin].PPORT == 0 || virtualPort->pins[pin].PDDR == 0 || virtualPort->pins[pin].PPIN == 0){
+		if(virtualPort->pins[pin].PPORT == 0
+				|| virtualPort->pins[pin].PDDR == 0
+				|| virtualPort->pins[pin].PPIN == 0)
+		{
 			READ_IO_DEBUG("conti\r\n");
 			continue;
 		}
@@ -96,9 +99,16 @@ void handleIOport(struct virtual_IO_port *virtualPort,
 	for (int pin = 0; pin < VIRTUAL_PORT_PINCOUNT; pin++) { /* loop over all virtual IO Pins */
 
 		if (!(mask & (1 << pin)))
+		{
 			continue;
+		}
 
-		if(virtualPort->pins[pin].PPORT == 0 || virtualPort->pins[pin].PDDR == 0 || virtualPort->pins[pin].PPIN == 0)continue;
+		if(virtualPort->pins[pin].PPORT == 0
+			|| virtualPort->pins[pin].PDDR == 0
+			|| virtualPort->pins[pin].PPIN == 0)
+		{
+			continue;
+		}
 
 		/*
 		 * first get all needed address information for current pin/port
