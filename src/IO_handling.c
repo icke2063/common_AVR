@@ -12,7 +12,7 @@
 	#include <ds18x20.h>
 #endif
 
-static uint16_t pulse_time = DEFAULT_PULSE_TIME;
+uint16_t pulse_time = DEFAULT_PULSE_TIME;
 
 unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 	unsigned char pin;
@@ -26,6 +26,7 @@ unsigned char readvirtIOport(struct virtual_IO_port *virtualPort) {
 		READ_IO_DEBUG("pPin:0x%x;",virtualPort->pins[pin].PPIN);
 		READ_IO_DEBUG("pin:%i\r\n",pin);
 		READ_IO_DEBUG("func:0x%x\r\n",virtualPort->pins[pin].function_code);
+		READ_IO_DEBUG("pulse_time: %i\r\n", pulse_time );
 
 		if(virtualPort->pins[pin].PPORT == 0
 				|| virtualPort->pins[pin].PDDR == 0

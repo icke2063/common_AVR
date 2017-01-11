@@ -43,7 +43,7 @@
 #define	bic(ADDRESS,BIT)	(!(ADDRESS & (1<<BIT)))		// bit is clear?
 
 #define DEFAULT_PULSE_TIME	300
-static uint16_t pulse_time;
+extern uint16_t pulse_time;
 
 /* structure with all needed address and function data */
 struct IO_pin{
